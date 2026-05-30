@@ -1,7 +1,7 @@
 # CareMate — Project Status
 
 > 1차 구현 완료 / 저장·공유 가능 상태 스냅샷
-> 최종 업데이트: 2026-05-31 (AI 영양제 설계 MVP 화면 추가)
+> 최종 업데이트: 2026-05-31 (AI 영양제 설계 버튼 트리거 연동 완료)
 
 ---
 
@@ -42,9 +42,10 @@
 - [x] **`family_histories` 암호화 POST / GET / DELETE** — 가족력 데이터 암호화 CRUD
 - [x] **가족력 관리 UI** — 프론트엔드 가족력 등록/조회/삭제 화면
 - [x] **CORS origin 제한** — `allow_origins=["*"]` 제거, `CORS_ALLOW_ORIGINS` 환경변수 기반 화이트리스트(미설정 시 로컬만 허용)
-- [x] **AI 영양제 설계 결과 화면 MVP (`/supplement-design`)** — 기존 GET API 조합 기반 rule-based 루틴 초안 화면. Anthropic API 호출 없음, 신규 DB 테이블/마이그레이션 없음, 결과 저장 없음. 6개 섹션(요약·루틴카드·겹침안내·가족력주의·면책배너·비활성 CTA). `npx tsc --noEmit` 통과, HTTP 200 확인.
+- [x] **AI 영양제 설계 결과 화면 MVP (`/supplement-design`)** — 기존 GET API 조합 기반 rule-based 루틴 초안 화면 (1단계).
+- [x] **AI 영양제 설계 버튼 트리거 연동** — `POST /users/me/supplement-design/generate`. Anthropic Haiku 호출 (`max_tokens=800`, `timeout=30s`). 버튼 클릭 시에만 실행, 페이지 진입 시 자동 호출 없음. AI 실패 시 백엔드 rule-based fallback (HTTP 200 유지). 건강상태 요약 textarea (최대 500자, 기존 `health_profiles.note` 활용, 저장 안 됨). `ANTHROPIC_API_KEY`는 백엔드에서만 사용. 신규 DB 테이블/마이그레이션 없음.
 
-> 백엔드 라우터 구성: `health`, `auth`, `users`, `health_context`, `family_histories` (`app/main.py`)
+> 백엔드 라우터 구성: `health`, `auth`, `users`, `health_context`, `family_histories`, `supplement_design` (`app/main.py`)
 
 ---
 
@@ -56,6 +57,7 @@
 - **Supabase RLS** — 행 수준 보안 정책으로 사용자별 데이터 격리 (`migrations/002_enable_rls.sql`, `003_rls_policies.sql`).
 - **JWKS 토큰 검증** — Supabase 공개키로 JWT 서명 검증.
 - **CORS origin 화이트리스트** — `allow_origins=["*"]` 제거. `CORS_ALLOW_ORIGINS`(콤마 구분) 환경변수로 허용 origin 통제하며, 미설정 시 로컬 개발 origin만 허용으로 안전 fallback. `allow_credentials=True` + 명시 origin 조합으로 Origin 반사 위험 제거.
+- **`ANTHROPIC_API_KEY` 백엔드 격리** — AI 호출은 FastAPI `ai_service.py`에서만 수행. 프론트엔드에 API key 미노출. prompt 전문·AI raw response·건강정보 로그 미출력. 의료 진단·처방 표현 시스템 프롬프트에서 명시 금지.
 
 > ⚠️ 키·토큰·`.env` 실제 값은 본 문서에 일절 포함하지 않습니다.
 
@@ -117,20 +119,22 @@ npm run dev
 | 기능 | 상태 | 사유 / 메모 |
 |------|------|-------------|
 | **report_enrichment** | 보류 | 리포트 보강 로직 미구현 |
-| **AI 영양제 설계 결과 화면** | ✅ MVP 완료 | rule-based 루틴 초안. 실제 AI 연동은 다음 단계. |
+| **AI 영양제 설계 결과 화면** | ✅ AI 연동 완료 | Haiku 버튼 트리거 + rule-based fallback. 사용량 제한은 다음 단계. |
 | **`require_admin` 라이브 검증** | 보류 | 관리자 권한 가드 실제 환경 검증 필요 |
 
 ---
 
 ## 7. 다음 작업 추천 (우선순위)
 
-1. **AI 영양제 설계 실제 연동** — `/supplement-design` MVP에 Anthropic API(`ai_service.py`) 연결. 현재 rule-based 로직을 AI 결과로 교체(출력 타입 유지).
+1. **AI 사용량 제한 / rate limit** — 사용자별 AI 생성 횟수 제한, 유료 기능 분리. 현재는 서버 단위 제한 없음 (TODO).
 2. **report_enrichment** — 건강 리포트 보강 파이프라인.
 3. **`require_admin` 라이브 검증** — 관리자 가드 동작 실환경 확인.
-4. **테스트 / CI** — 핵심 플로우(인증·암호화 CRUD) 자동화 테스트 및 파이프라인 구축.
+4. **테스트 / CI** — 핵심 플로우(인증·암호화 CRUD·AI 생성) 자동화 테스트 및 파이프라인 구축.
 
 > ✅ **CORS 제한 완료** (2026-05-30): 배포 전 도메인 한정 작업은 `CORS_ALLOW_ORIGINS` 환경변수 기반으로 적용 완료. 운영 배포 시 `.env`에 실제 프론트 도메인만 채우면 됨.
 > ✅ **영양제 설계 MVP 완료** (2026-05-31): `/supplement-design` 페이지. 기존 GET API 3개 조합 + rule-based 결과. AI 교체용 이음새(`src/lib/supplement-design/recommend.ts`) 유지.
+> ✅ **AI 버튼 트리거 연동 완료** (2026-05-31): Anthropic Haiku 호출, 버튼 클릭 1회만 실행, 성공 후 버튼 비활성화. `ANTHROPIC_API_KEY` 백엔드 격리. AI 실패 시 rule-based fallback (HTTP 200). 신규 DB 없음.
+> ⚠️ **TODO — AI 사용량 제한**: 사용자별 횟수 제한·rate limit·유료 기능 분리는 다음 단계 과제.
 
 ---
 
