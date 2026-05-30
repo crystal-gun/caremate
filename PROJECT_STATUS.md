@@ -1,7 +1,7 @@
 # CareMate — Project Status
 
 > 1차 구현 완료 / 저장·공유 가능 상태 스냅샷
-> 최종 업데이트: 2026-05-30 (CORS origin 제한 적용)
+> 최종 업데이트: 2026-05-31 (AI 영양제 설계 MVP 화면 추가)
 
 ---
 
@@ -42,6 +42,7 @@
 - [x] **`family_histories` 암호화 POST / GET / DELETE** — 가족력 데이터 암호화 CRUD
 - [x] **가족력 관리 UI** — 프론트엔드 가족력 등록/조회/삭제 화면
 - [x] **CORS origin 제한** — `allow_origins=["*"]` 제거, `CORS_ALLOW_ORIGINS` 환경변수 기반 화이트리스트(미설정 시 로컬만 허용)
+- [x] **AI 영양제 설계 결과 화면 MVP (`/supplement-design`)** — 기존 GET API 조합 기반 rule-based 루틴 초안 화면. Anthropic API 호출 없음, 신규 DB 테이블/마이그레이션 없음, 결과 저장 없음. 6개 섹션(요약·루틴카드·겹침안내·가족력주의·면책배너·비활성 CTA). `npx tsc --noEmit` 통과, HTTP 200 확인.
 
 > 백엔드 라우터 구성: `health`, `auth`, `users`, `health_context`, `family_histories` (`app/main.py`)
 
@@ -116,19 +117,20 @@ npm run dev
 | 기능 | 상태 | 사유 / 메모 |
 |------|------|-------------|
 | **report_enrichment** | 보류 | 리포트 보강 로직 미구현 |
-| **AI 영양제 설계 결과 화면** | 보류 | 핵심 후킹 기능, 다음 우선 구현 대상 |
+| **AI 영양제 설계 결과 화면** | ✅ MVP 완료 | rule-based 루틴 초안. 실제 AI 연동은 다음 단계. |
 | **`require_admin` 라이브 검증** | 보류 | 관리자 권한 가드 실제 환경 검증 필요 |
 
 ---
 
 ## 7. 다음 작업 추천 (우선순위)
 
-1. **AI 영양제 설계 결과 화면** — 서비스 핵심 후킹 기능 구현.
+1. **AI 영양제 설계 실제 연동** — `/supplement-design` MVP에 Anthropic API(`ai_service.py`) 연결. 현재 rule-based 로직을 AI 결과로 교체(출력 타입 유지).
 2. **report_enrichment** — 건강 리포트 보강 파이프라인.
 3. **`require_admin` 라이브 검증** — 관리자 가드 동작 실환경 확인.
 4. **테스트 / CI** — 핵심 플로우(인증·암호화 CRUD) 자동화 테스트 및 파이프라인 구축.
 
 > ✅ **CORS 제한 완료** (2026-05-30): 배포 전 도메인 한정 작업은 `CORS_ALLOW_ORIGINS` 환경변수 기반으로 적용 완료. 운영 배포 시 `.env`에 실제 프론트 도메인만 채우면 됨.
+> ✅ **영양제 설계 MVP 완료** (2026-05-31): `/supplement-design` 페이지. 기존 GET API 3개 조합 + rule-based 결과. AI 교체용 이음새(`src/lib/supplement-design/recommend.ts`) 유지.
 
 ---
 

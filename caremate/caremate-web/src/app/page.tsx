@@ -80,8 +80,14 @@ export default async function HomePage() {
         </div>
 
         <Link
+          href="/supplement-design"
+          className="block mt-4 text-sm font-medium text-blue-600 hover:underline"
+        >
+          내 영양제 루틴 초안 보기 →
+        </Link>
+        <Link
           href="/family-history"
-          className="block mt-4 text-sm text-blue-600 hover:underline"
+          className="block mt-2 text-sm text-blue-600 hover:underline"
         >
           가족력 관리 →
         </Link>
