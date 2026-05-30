@@ -1,7 +1,7 @@
 # CareMate — Project Status
 
 > 1차 구현 완료 / 저장·공유 가능 상태 스냅샷
-> 최종 업데이트: 2026-05-30
+> 최종 업데이트: 2026-05-30 (CORS origin 제한 적용)
 
 ---
 
@@ -41,6 +41,7 @@
 - [x] **`health_profiles.note` 암호화** — 민감 메모 필드 암호화 저장
 - [x] **`family_histories` 암호화 POST / GET / DELETE** — 가족력 데이터 암호화 CRUD
 - [x] **가족력 관리 UI** — 프론트엔드 가족력 등록/조회/삭제 화면
+- [x] **CORS origin 제한** — `allow_origins=["*"]` 제거, `CORS_ALLOW_ORIGINS` 환경변수 기반 화이트리스트(미설정 시 로컬만 허용)
 
 > 백엔드 라우터 구성: `health`, `auth`, `users`, `health_context`, `family_histories` (`app/main.py`)
 
@@ -53,6 +54,7 @@
 - **민감 건강정보 AES-256-GCM 암호화** — `health_profiles.note`, `family_histories` 등 민감 필드를 애플리케이션 계층에서 암호화 후 저장.
 - **Supabase RLS** — 행 수준 보안 정책으로 사용자별 데이터 격리 (`migrations/002_enable_rls.sql`, `003_rls_policies.sql`).
 - **JWKS 토큰 검증** — Supabase 공개키로 JWT 서명 검증.
+- **CORS origin 화이트리스트** — `allow_origins=["*"]` 제거. `CORS_ALLOW_ORIGINS`(콤마 구분) 환경변수로 허용 origin 통제하며, 미설정 시 로컬 개발 origin만 허용으로 안전 fallback. `allow_credentials=True` + 명시 origin 조합으로 Origin 반사 위험 제거.
 
 > ⚠️ 키·토큰·`.env` 실제 값은 본 문서에 일절 포함하지 않습니다.
 
@@ -116,17 +118,17 @@ npm run dev
 | **report_enrichment** | 보류 | 리포트 보강 로직 미구현 |
 | **AI 영양제 설계 결과 화면** | 보류 | 핵심 후킹 기능, 다음 우선 구현 대상 |
 | **`require_admin` 라이브 검증** | 보류 | 관리자 권한 가드 실제 환경 검증 필요 |
-| **CORS 배포 전 제한** | 보류 | 현재 `allow_origins=["*"]` (개발용). 배포 전 도메인 제한 필요 |
 
 ---
 
 ## 7. 다음 작업 추천 (우선순위)
 
-1. **CORS 제한** — 배포 전 `allow_origins` 를 실제 프론트 도메인으로 한정 (보안 우선).
-2. **AI 영양제 설계 결과 화면** — 서비스 핵심 후킹 기능 구현.
-3. **report_enrichment** — 건강 리포트 보강 파이프라인.
-4. **`require_admin` 라이브 검증** — 관리자 가드 동작 실환경 확인.
-5. **테스트 / CI** — 핵심 플로우(인증·암호화 CRUD) 자동화 테스트 및 파이프라인 구축.
+1. **AI 영양제 설계 결과 화면** — 서비스 핵심 후킹 기능 구현.
+2. **report_enrichment** — 건강 리포트 보강 파이프라인.
+3. **`require_admin` 라이브 검증** — 관리자 가드 동작 실환경 확인.
+4. **테스트 / CI** — 핵심 플로우(인증·암호화 CRUD) 자동화 테스트 및 파이프라인 구축.
+
+> ✅ **CORS 제한 완료** (2026-05-30): 배포 전 도메인 한정 작업은 `CORS_ALLOW_ORIGINS` 환경변수 기반으로 적용 완료. 운영 배포 시 `.env`에 실제 프론트 도메인만 채우면 됨.
 
 ---
 

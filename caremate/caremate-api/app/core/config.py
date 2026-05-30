@@ -12,5 +12,17 @@ class Settings(BaseSettings):
     ENCRYPTION_KEY: str = ""
     ENVIRONMENT: str = "development"
 
+    # CORS 허용 origin (콤마 구분). 비어 있으면 로컬 개발 origin만 허용.
+    # 예: "https://app.caremate.com,https://www.caremate.com"
+    CORS_ALLOW_ORIGINS: str = ""
+
+    @property
+    def cors_allow_origins(self) -> list[str]:
+        origins = [o.strip() for o in self.CORS_ALLOW_ORIGINS.split(",") if o.strip()]
+        if origins:
+            return origins
+        # fallback: 환경변수 미설정 시 로컬 개발만 허용 ("*"로 되돌아가지 않음)
+        return ["http://localhost:3000", "http://127.0.0.1:3000"]
+
 
 settings = Settings()
