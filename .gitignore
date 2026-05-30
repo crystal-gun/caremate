@@ -1,0 +1,49 @@
+# ---- Secrets / env ----
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+**/*.env
+
+# Keep example templates (placeholders only, no secrets)
+!**/.env.example
+
+# ---- Python ----
+.venv/
+**/.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.ruff_cache/
+.pytest_cache/
+
+# ---- Node / Next ----
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+*.tsbuildinfo
+
+# ---- Build artifacts ----
+dist/
+build/
+*.egg-info/
+
+# ---- Logs ----
+next.log
+uvicorn.err
+*.log
+
+# ---- OS ----
+.DS_Store
+
+# ---- BMad / Claude tooling ----
+_bmad/
+.claude/
+
+# ---- Keys / certs ----
+*.pem
+*.key
+*.crt
