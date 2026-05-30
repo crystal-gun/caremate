@@ -19,6 +19,7 @@ export type UserProfileData = {
 export type HealthProfileData = {
   health_interests: string[] | null
   insurance_awareness: boolean | null
+  note: string | null
 }
 
 export type SupplementData = {

@@ -6,33 +6,14 @@ import {
   type SupplementData,
   type FamilyHistoryData,
   type UserProfileData,
-  type RoutineCard,
-  type OverlapNotice,
-  type FamilyCaution,
 } from '@/lib/supplement-design/recommend'
+import DesignContent from './DesignContent'
 
-// ── 스타일 상수 (기존 프로젝트 컨벤션 통일) ──────────────────────────────
 const headerClass = 'bg-white border-b border-gray-100 px-4 py-4'
 const cardClass = 'bg-white rounded-2xl border border-gray-100 p-5'
-const sectionTitleClass = 'text-sm font-semibold text-gray-700 mb-3'
 
-const KIND_STYLES: Record<RoutineCard['kind'], { badge: string; border: string }> = {
-  '기본 루틴 초안': {
-    badge: 'bg-blue-50 text-blue-700',
-    border: 'border-blue-100',
-  },
-  '주의해서 살펴볼 루틴': {
-    badge: 'bg-amber-50 text-amber-700',
-    border: 'border-amber-100',
-  },
-  '생활습관 보완': {
-    badge: 'bg-green-50 text-green-700',
-    border: 'border-green-100',
-  },
-}
-
-// ── 데이터 페치 (서버 컴포넌트, 병렬 fetch) ───────────────────────────────
 export default async function SupplementDesignPage() {
+  // 4개 GET 병렬 fetch — AI 자동 호출 없음, 버튼 클릭 시에만 AI 실행
   const [profileRes, healthProfileRes, supplementsRes, familyRes] = await Promise.allSettled([
     callFastApi<UserProfileData>('/users/me'),
     callFastApi<HealthProfileData>('/users/me/health-profile'),
@@ -60,8 +41,12 @@ export default async function SupplementDesignPage() {
       ? (familyRes.value.data ?? [])
       : []
 
-  const result = buildSupplementDesign({ profile, healthProfile, supplements, familyHistories })
-  const { summary, routineCards, overlapNotices, familyCautions } = result
+  // rule-based 초안 (즉시 표시 + 2차 fallback 소스)
+  const fallback = buildSupplementDesign({ profile, healthProfile, supplements, familyHistories })
+  const { summary } = fallback
+
+  // 기존 note를 AI 입력 힌트로 활용 (최대 500자, 새 DB 컬럼 없음)
+  const noteHint = (healthProfile?.note ?? '').slice(0, 500)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -103,97 +88,16 @@ export default async function SupplementDesignPage() {
           )}
         </div>
 
-        {/* 2) 추천 루틴 카드 3개 */}
-        <div>
-          <p className={sectionTitleClass}>루틴 초안 (일반 건강 정보 기반)</p>
-          <div className="space-y-3">
-            {routineCards.map((card) => {
-              const style = KIND_STYLES[card.kind]
-              return (
-                <div
-                  key={card.id}
-                  className={`${cardClass} border ${style.border}`}
-                >
-                  <span
-                    className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-2 ${style.badge}`}
-                  >
-                    {card.kind}
-                  </span>
-                  <p className="text-sm font-semibold text-gray-800">{card.title}</p>
-                  <p className="text-xs text-gray-500 mt-1">{card.description}</p>
-                  <ul className="mt-3 flex flex-wrap gap-2">
-                    {card.items.map((item) => (
-                      <li
-                        key={item}
-                        className="text-xs bg-gray-50 border border-gray-200 px-2 py-1 rounded-lg text-gray-700"
-                      >
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* 3) 복용 중 영양제 겹침/주의 안내 */}
-        <div>
-          <p className={sectionTitleClass}>현재 복용 중인 영양제 확인</p>
-          {supplements.length === 0 ? (
-            <div className={cardClass}>
-              <p className="text-sm text-gray-400">등록된 복용 영양제가 없습니다.</p>
-            </div>
-          ) : overlapNotices.length === 0 ? (
-            <div className={cardClass}>
-              <p className="text-sm text-gray-600">
-                복용 중인 영양제({supplements.map((s: SupplementData) => s.name).join(', ')})와
-                루틴 초안 간 겹치는 항목이 확인되지 않았어요.
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                정확한 판단은 전문가와 상담하세요.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {overlapNotices.map((notice: OverlapNotice) => (
-                <div key={notice.supplementName} className={`${cardClass} border border-amber-100`}>
-                  <p className="text-xs font-semibold text-amber-700 mb-1">
-                    겹침 확인 필요 — {notice.supplementName}
-                  </p>
-                  <p className="text-xs text-gray-600">{notice.message}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* 4) 가족력 기반 주의 포인트 */}
-        <div>
-          <p className={sectionTitleClass}>가족력 기반 주의 포인트</p>
-          {familyCautions.length === 0 ? (
-            <div className={cardClass}>
-              <p className="text-sm text-gray-400">등록된 가족력이 없습니다.</p>
-              <Link
-                href="/family-history"
-                className="mt-2 inline-block text-xs text-blue-600 hover:underline"
-              >
-                가족력 입력하기 →
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {familyCautions.map((caution: FamilyCaution, idx: number) => (
-                <div key={idx} className={`${cardClass} border border-gray-200`}>
-                  <p className="text-xs font-semibold text-gray-700 mb-1">
-                    {caution.memberLabel} · {caution.focus}
-                  </p>
-                  <p className="text-xs text-gray-500">{caution.message}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* 2~4) 루틴 카드 / 겹침 안내 / 가족력 주의 + AI 생성 버튼 (Client Component) */}
+        <DesignContent
+          initialRoutineCards={fallback.routineCards}
+          initialOverlapNotices={fallback.overlapNotices}
+          initialFamilyCautions={fallback.familyCautions}
+          supplements={supplements}
+          healthInterests={healthProfile?.health_interests ?? []}
+          familyHistories={familyHistories}
+          noteHint={noteHint}
+        />
 
         {/* 5) 면책 배너 */}
         <div className="bg-gray-100 rounded-2xl p-4">
