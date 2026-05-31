@@ -1,7 +1,7 @@
-"""Anthropic API 기반 영양제 루틴 초안 생성 (1회, 저장 없음)."""
+"""OpenAI API 기반 영양제 루틴 초안 생성 (1회, 저장 없음)."""
 import json
 
-from anthropic import AsyncAnthropic
+from openai import AsyncOpenAI
 
 from app.core.config import settings
 
@@ -37,7 +37,7 @@ async def generate_supplement_draft(
     family_info: list[dict],
     health_note: str | None = None,
 ) -> dict | None:
-    if not settings.ANTHROPIC_API_KEY:
+    if not settings.OPENAI_API_KEY:
         return None
 
     # 유저 메시지 구성 — note 최대 500자, 닉네임 등 개인식별정보 미포함
@@ -61,15 +61,17 @@ async def generate_supplement_draft(
         return None
 
     try:
-        client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
-        resp = await client.messages.create(
-            model="claude-haiku-4-5-20251001",
+        client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+        resp = await client.chat.completions.create(
+            model="gpt-4o-mini",
             max_tokens=800,
-            system=_SYSTEM,
-            messages=[{"role": "user", "content": "\n".join(parts)}],
+            messages=[
+                {"role": "system", "content": _SYSTEM},
+                {"role": "user", "content": "\n".join(parts)},
+            ],
             timeout=30.0,
         )
-        raw_text = resp.content[0].text if resp.content else ""
+        raw_text = resp.choices[0].message.content or ""
         return json.loads(raw_text)
     except Exception:  # noqa: BLE001
         return None

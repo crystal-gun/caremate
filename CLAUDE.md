@@ -62,8 +62,8 @@ npm run dev                        # http://localhost:3000
 - 암복호화 유틸: `app/core/crypto.py`
 
 ### AI (영양제 설계)
-- Anthropic Haiku 호출은 **백엔드 전용** (`app/services/ai_service.py`)
-- `ANTHROPIC_API_KEY`는 backend `.env`에서만 사용, 프론트 미노출
+- OpenAI `gpt-4o-mini` 호출은 **백엔드 전용** (`app/services/ai_service.py`)
+- `OPENAI_API_KEY`는 backend `.env`에서만 사용, 프론트 미노출
 - AI 호출은 사용자가 버튼 클릭 시에만 실행 — 페이지 진입 시 자동 호출 금지
 - AI 실패 시 백엔드 rule-based fallback (HTTP 200 유지, `is_ai: false`)
 - 프론트 Server Action (`src/app/actions/supplement-design.ts`) → callFastApi POST
@@ -83,7 +83,7 @@ npm run dev                        # http://localhost:3000
 ## 보안 원칙 (반드시 준수)
 
 - `.env`, `.env.local`, 실제 시크릿 값 절대 출력 금지
-- `ANTHROPIC_API_KEY`, `ENCRYPTION_KEY`, `SUPABASE_SERVICE_KEY` 등 키 값 미출력
+- `OPENAI_API_KEY`, `ENCRYPTION_KEY`, `SUPABASE_SERVICE_KEY` 등 키 값 미출력
 - AI prompt 전문 / AI raw response 로그 출력 금지
 - 건강 정보(가족력·병명·메모 등) 로그 출력 금지
 - 의료 진단 / 처방 / 치료 표현 사용 금지
