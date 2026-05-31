@@ -135,6 +135,7 @@ npm run dev
 > ✅ **영양제 설계 MVP 완료** (2026-05-31): `/supplement-design` 페이지. 기존 GET API 3개 조합 + rule-based 결과. AI 교체용 이음새(`src/lib/supplement-design/recommend.ts`) 유지.
 > ✅ **AI 버튼 트리거 연동 완료** (2026-05-31): Anthropic Haiku 호출, 버튼 클릭 1회만 실행, 성공 후 버튼 비활성화. `ANTHROPIC_API_KEY` 백엔드 격리. AI 실패 시 rule-based fallback (HTTP 200). 신규 DB 없음.
 > ⚠️ **TODO — AI 사용량 제한**: 사용자별 횟수 제한·rate limit·유료 기능 분리는 다음 단계 과제.
+> ⚠️ **TODO — AI 성공 경로 E2E 검증 보류**: Anthropic API credit 결제 완료 후 실제 키로 재검증 필요. fallback 경로(rule-based 유지·버튼 재활성화·에러 메시지)는 Playwright로 확인 완료.
 
 ---
 
