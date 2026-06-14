@@ -1,14 +1,21 @@
 'use server'
 
 import { callFastApi } from '@/lib/api/fastapi'
-import type { RoutineCard, OverlapNotice, FamilyCaution } from '@/lib/supplement-design/recommend'
+import type {
+  RoutineCard,
+  OverlapNotice,
+  FamilyCaution,
+  AiDesignResult,
+} from '@/lib/supplement-design/recommend'
 
-export type ApiDesignResult = {
+type FallbackDesignResult = {
   routineCards: RoutineCard[]
   overlapNotices: OverlapNotice[]
   familyCautions: FamilyCaution[]
-  is_ai: boolean
+  is_ai: false
 }
+
+export type ApiDesignResult = AiDesignResult | FallbackDesignResult
 
 type GenerateInput = {
   health_interests: string[]

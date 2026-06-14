@@ -222,3 +222,36 @@ function buildFamilyCautions(histories: FamilyHistoryData[]): FamilyCaution[] {
 function uniq(arr: string[]): string[] {
   return Array.from(new Set(arr))
 }
+
+// ── AI 전용 출력 타입 (CareMate 코멘트 엔진 구조) ──────────────────────────
+export type AiComment = {
+  summary: string
+  fact_point: string
+  interpretation: string
+  next_action: string
+}
+
+export type AiCheckpoint = {
+  tag: string
+  detail: string
+}
+
+export type AiCandidate = {
+  name: string
+  reason: string
+  precaution: string
+}
+
+export type AiCautionPoint = {
+  item: string
+  message: string
+}
+
+export type AiDesignResult = {
+  comment: AiComment
+  checkpoints: AiCheckpoint[]
+  candidates: AiCandidate[]
+  caution_points: AiCautionPoint[]
+  weekly_mission: string
+  is_ai: true
+}

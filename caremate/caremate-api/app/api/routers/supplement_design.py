@@ -2,6 +2,7 @@ from fastapi import APIRouter, Body, Depends
 
 from app.dependencies import get_current_user
 from app.schemas.supplement_design import (
+    AiSupplementDesignOut,
     FamilyCautionOut,
     OverlapNoticeOut,
     RoutineCardOut,
@@ -145,7 +146,6 @@ async def generate_supplement_design(
     user_id: str = Depends(get_current_user),
 ):
     # 1) AI 시도 — health_note는 스키마에서 max_length=500 검증 완료
-    content: SupplementDesignContent | None = None
     raw = await generate_supplement_draft(
         health_interests=payload.health_interests,
         supplement_names=[s.name for s in payload.supplements if (s.name or "").strip()],
@@ -157,13 +157,10 @@ async def generate_supplement_design(
     )
     if raw is not None:
         try:
-            raw["is_ai"] = True
-            content = SupplementDesignContent.model_validate(raw)
+            ai_content = AiSupplementDesignOut.model_validate(raw)
+            return {"data": ai_content.model_dump()}
         except Exception:  # noqa: BLE001
-            content = None
+            pass
 
     # 2) rule-based fallback (HTTP 200 유지)
-    if content is None:
-        content = _rule_based(payload)
-
-    return {"data": content.model_dump()}
+    return {"data": _rule_based(payload).model_dump()}
