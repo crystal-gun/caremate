@@ -43,6 +43,9 @@ uvicorn.err
 _bmad/
 .claude/
 
+# ---- Local test/verify ----
+_verify/
+
 # ---- Keys / certs ----
 *.pem
 *.key
