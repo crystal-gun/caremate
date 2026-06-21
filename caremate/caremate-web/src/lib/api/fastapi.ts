@@ -16,6 +16,17 @@ export async function callFastApi<T = unknown>(
   init?: { method?: string; body?: unknown },
 ): Promise<FastApiResult<T>> {
   const supabase = await createClient()
+
+  // getUser()는 Supabase 서버에 직접 검증 요청 → 만료 토큰 자동 갱신 후 인메모리 세션 업데이트
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { ok: false, status: 401, data: null, detail: 'No active session' }
+  }
+
+  // getUser() 이후 인메모리에 갱신된 세션에서 access_token 추출
   const {
     data: { session },
   } = await supabase.auth.getSession()
